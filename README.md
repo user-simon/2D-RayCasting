@@ -7,3 +7,5 @@ In this project, rays are shot out from the cursor in each direction and stops a
 
 ## Note:
 You have to set up SFML yourself for the project to compile.
+
+![Graphics](ray-casting.gif)
