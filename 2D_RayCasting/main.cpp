@@ -1,13 +1,20 @@
 #include "globals.h"
 using namespace sf;
 
-Vector2f WINDOW_SIZE = Vector2f(900, 900);
 Vector2f g_mouse_pos = Vector2f(0, 0);
 
 int main()
 {
+	// Settings
+	const float ray_density = 100;
+	const int ray_alpha = 10;
+	Vector2f window_size(900, 900);
+
+	// Initialize randomizer
 	srand(time(NULL));
-	RenderWindow window(VideoMode(WINDOW_SIZE.x, WINDOW_SIZE.y), "2D Ray Casting");
+
+	// Make window
+	RenderWindow window(VideoMode(window_size.x, window_size.y), "2D Ray Casting");
 
 	// Make walls
 	std::vector<wall> walls;
@@ -15,22 +22,26 @@ int main()
 	{
 		// Make wall with randomized end and start position
 		const wall w = wall(
-			Vector2f(random(WINDOW_SIZE.x), random(WINDOW_SIZE.y)),
-			Vector2f(random(WINDOW_SIZE.x), random(WINDOW_SIZE.y)));
+			Vector2f(random(window_size.x), random(window_size.y)),
+			Vector2f(random(window_size.x), random(window_size.y)));
 		walls.push_back(w);
 	}
 
-	// Make the rays
-	// Rays per degree
-	const float density = 100;
+	// Make rays
 	std::vector<ray> rays;
-	for (float i = 0; i < 360; i += 1.0 / density)
+	for (float i = 0; i < 360; i += 1.0 / ray_density)
 	{
 		const float radian = degree_to_radian(i);
 		const float x = cos(radian);
 		const float y = sin(radian);
 		rays.push_back(ray(x, y));
 	}
+
+	// Make line used for drawing rays
+	// Alpha is applied to make it look more like light, since it's packed tighter and therefore brighter closer to ray origin
+	VertexArray ray_line(Lines, 2);
+	ray_line[0].color.a = ray_alpha;
+	ray_line[1].color.a = ray_alpha;
 
 	// Main loop
 	while (window.isOpen())
@@ -46,14 +57,7 @@ int main()
 
 		// Update mouse pos
 		g_mouse_pos = Vector2f(Mouse::getPosition(window));
-
-		// Make line used for drawing rays
-		// Alpha is applied to make it look more like light, since it's packed tighter and therefore brighter at ray origin
-		VertexArray ray_line(Lines, 2);
-		const int alpha = 10;
 		ray_line[0].position = g_mouse_pos;
-		ray_line[0].color.a = alpha;
-		ray_line[1].color.a = alpha;
 
 		window.clear();
 
@@ -89,13 +93,13 @@ int main()
 		window.display();
 
 		// Re-randomize walls if key is pressed
-		if (key_pressed(Keyboard::Key::R) || key_pressed(Keyboard::Key::Space))
+		if (Keyboard::isKeyPressed(Keyboard::R) || Keyboard::isKeyPressed(Keyboard::Space))
 		{
 			for (int i = 0; i < walls.size(); i++)
 			{
 				walls[i] = wall(
-					Vector2f(random(WINDOW_SIZE.x), random(WINDOW_SIZE.y)),
-					Vector2f(random(WINDOW_SIZE.x), random(WINDOW_SIZE.y))
+					Vector2f(random(window_size.x), random(window_size.y)),
+					Vector2f(random(window_size.x), random(window_size.y))
 				);
 			}
 			sleep(seconds(0.2));
