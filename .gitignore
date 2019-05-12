@@ -30,9 +30,8 @@
 *.ipch
 *.bat
 *.dll
-*.vcxproj
-*.filters
 *.user
+*.filters
 .vs/
 Debug/
 Release/
