@@ -3,17 +3,16 @@
 
 ray::ray(float x, float y)
 {
-	// Default length is the distance from the mouse that the rays will be drawn and checked for intersections 
-	// This is mostly arbitrary
-	m_default_length = 3000;
-	m_direction = Vector2f(x, y);
+	// Set end point relative to mouse cursor
+	// Add arbitrary length
+	m_relative_end = Vector2f(x, y) * 3000.f;
 }
 
 // Reset end-point of ray
 void ray::reset()
 {
 	// Set end-point to (default length) distance away from mouse in set direction
-	m_end = g_mouse_pos + m_direction * (float)m_default_length;
+	m_end = g_mouse_pos + m_relative_end;
 }
 
 // Calculates intersection-point two lines
@@ -33,6 +32,7 @@ void ray::calc_hit(Vector2f p3, Vector2f p4)
 	const float t =  ((p1.x - p3.x) * (p3.y - p4.y) - (p1.y - p3.y) * (p3.x - p4.x)) / den;
 	const float u = -((p1.x - p2.x) * (p1.y - p3.y) - (p1.y - p2.y) * (p1.x - p3.x)) / den;
 
+	// If there's an intersection...
 	if (t > 0 && t < 1 && u > 0 && u < 1)
 	{
 		// Gets intersection point

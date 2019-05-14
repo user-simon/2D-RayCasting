@@ -12,6 +12,5 @@ public:
 	void calc_hit(Vector2f wall1, Vector2f wall2);
 	void reset();
 private:
-	int m_default_length;
-	Vector2f m_direction;
+	Vector2f m_relative_end;
 };

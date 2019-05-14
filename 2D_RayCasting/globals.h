@@ -3,8 +3,7 @@
 #include "ray.h"
 #include "wall.h"
 
-constexpr auto PI = 3.14159265358979f;
+constexpr auto TWO_PI = 3.14159265358979f * 2;
 extern Vector2f g_mouse_pos;
 
-inline float degree_to_radian(double angle) { return (angle * PI) / 180; }
 inline int random(int max, int min = 0) { return rand() % (max - min) + min; }

@@ -6,9 +6,10 @@ Vector2f g_mouse_pos = Vector2f(0, 0);
 int main()
 {
 	// Settings
-	const float ray_density = 100;
-	const int ray_alpha = 10;
-	Vector2f window_size(900, 900);
+	const float    ray_density = 1000;
+	const Color    ray_color = Color(255, 255, 255, 10);
+	const Color    wall_color = Color::Red;
+	const Vector2f window_size(900, 900);
 
 	// Initialize randomizer
 	srand(time(NULL));
@@ -20,30 +21,34 @@ int main()
 	std::vector<wall> walls;
 	for (int i = 0; i < 4; i++)
 	{
-		// Make wall with randomized end and start position
-		const wall w = wall(
-			Vector2f(random(window_size.x), random(window_size.y)),
-			Vector2f(random(window_size.x), random(window_size.y)));
-		walls.push_back(w);
+		// Randomize start and end positions
+		const Vector2f start(random(window_size.x), random(window_size.y));
+		const Vector2f end(random(window_size.x), random(window_size.y));
+		walls.push_back(wall(start, end));
 	}
 
 	// Make rays
 	std::vector<ray> rays;
-	for (float i = 0; i < 360; i += 1.0 / ray_density)
+	const float step = 1.f / ray_density;
+	for (float a = 0; a < TWO_PI; a += step)
 	{
-		const float radian = degree_to_radian(i);
-		const float x = cos(radian);
-		const float y = sin(radian);
+		const float x = cos(a);
+		const float y = sin(a);
 		rays.push_back(ray(x, y));
 	}
 
 	// Make line used for drawing rays
-	// Alpha is applied to make it look more like light, since it's packed tighter and therefore brighter closer to ray origin
 	VertexArray ray_line(Lines, 2);
-	ray_line[0].color.a = ray_alpha;
-	ray_line[1].color.a = ray_alpha;
+	ray_line[0].color = ray_color;
+	ray_line[1].color = ray_color;
+
+	// Make line used for drawing walls
+	VertexArray wall_line(Lines, 2);
+	wall_line[0].color = wall_color;
+	wall_line[1].color = wall_color;
 
 	// Main loop
+	Vector2f mouse_snapshot;
 	while (window.isOpen())
 	{
 		Event event;
@@ -55,8 +60,25 @@ int main()
 			}	
 		}
 
+		// Re-randomize walls if key is pressed
+		if (Keyboard::isKeyPressed(Keyboard::R) || Keyboard::isKeyPressed(Keyboard::Space))
+		{
+			for (int i = 0; i < walls.size(); i++)
+			{
+				walls[i].start = Vector2f(random(window_size.x), random(window_size.y));
+				walls[i].end = Vector2f(random(window_size.x), random(window_size.y));
+			}
+			sleep(seconds(0.2));
+		}
+
 		// Update mouse pos
 		g_mouse_pos = Vector2f(Mouse::getPosition(window));
+
+		// If mouse if the same as previous frame, move on to the next
+		if (mouse_snapshot == g_mouse_pos)
+			continue;
+
+		// Set start of ray-drawing line to mouse position
 		ray_line[0].position = g_mouse_pos;
 
 		window.clear();
@@ -64,13 +86,16 @@ int main()
 		// Calculate intersections and draw rays
 		for (int i = 0; i < rays.size(); i++)
 		{
+			// Set ray end-point to default
+			rays[i].reset();
+
 			// Cycle through every wall and set end point to intersection
 			// When an intersection is found, the end-point is set to that intersection, meaning the next check will check for walls
 			// between mouse and the new end-point. This means the ray will always go to the nearest wall
 			for (int j = 0; j < walls.size(); j++)
 			{
 				// Calculate ray end-point
-				rays[i].calc_hit(walls[j].line[0].position, walls[j].line[1].position);
+				rays[i].calc_hit(walls[j].start, walls[j].end);
 			}
 			
 			// Set drawing-line end to final intersection
@@ -78,32 +103,21 @@ int main()
 			
 			// Draw ray
 			window.draw(ray_line);
-			
-			// Set ray end-point to default
-			rays[i].reset();
 		}
 
 		// Draw walls
 		for (int i = 0; i < walls.size(); i++)
 		{
-			window.draw(walls[i].line);
+			wall_line[0].position = walls[i].start;
+			wall_line[1].position = walls[i].end;
+			window.draw(wall_line);
 		}
 
 		// Update window
 		window.display();
 
-		// Re-randomize walls if key is pressed
-		if (Keyboard::isKeyPressed(Keyboard::R) || Keyboard::isKeyPressed(Keyboard::Space))
-		{
-			for (int i = 0; i < walls.size(); i++)
-			{
-				walls[i] = wall(
-					Vector2f(random(window_size.x), random(window_size.y)),
-					Vector2f(random(window_size.x), random(window_size.y))
-				);
-			}
-			sleep(seconds(0.2));
-		}
+		// Save current mouse position
+		mouse_snapshot = g_mouse_pos;
 	}
 
 	return 0;
